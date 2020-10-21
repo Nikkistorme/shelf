@@ -1,12 +1,8 @@
 const defaultVolume = {
   author: "",
-  categories: [],
   description: "",
   expanded: false,
   imageLinks: {},
-  industryIdentifiers: [],
-  language: "",
-  maturityRating: "",
   pageCount: 0,
   previewLink: "",
   printType: "",

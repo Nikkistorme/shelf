@@ -9,9 +9,10 @@
 
 <script>
 // import { mapMutations } from "vuex";
-import { defaultVolume, stringFromArrayOfStrings } from "../helpers";
+// import { defaultVolume, stringFromArrayOfStrings } from "../helpers";
 import AddBookForm from "./AddBookForm.vue";
 import BookSearchItem from "./BookSearchItem";
+const parseString = require('xml2js').parseString;
 
 export default {
   components: {
@@ -25,50 +26,35 @@ export default {
         keyword: "",
         author: ""
       },
-      google_books_api: process.env.VUE_APP_GOOGLE_BOOKS_API_KEY
+      google_books_api: process.env.VUE_APP_GOOGLE_BOOKS_API_KEY,
+      goodreads_api: process.env.VUE_APP_GOODREADS_API_KEY
     };
   },
   methods: {
     getVolume() {
-      const keywordUrl = `${this.search.keyword}`;
-      let authorUrl = "";
-      if (this.search.author && !this.search.keyword) {
-        authorUrl = `inauthor:${this.search.author}`;
-      } else if (this.search.author && this.search.keyword) {
-        authorUrl = `+inauthor:${this.search.author}`;
-      }
-      const url = `https://www.googleapis.com/books/v1/volumes?q=${
-        this.search.keyword ? keywordUrl : ""
-      }${this.search.author ? authorUrl : ""}&key=${this.google_books_api}`;
+      // const keywordUrl = `${this.search.keyword}`;
+      // let authorUrl = "";
+      // if (this.search.author && !this.search.keyword) {
+      //   authorUrl = `inauthor:${this.search.author}`;
+      // } else if (this.search.author && this.search.keyword) {
+      //   authorUrl = `+inauthor:${this.search.author}`;
+      // }
+      // const url = `https://www.googleapis.com/books/v1/volumes?q=${
+      //   this.search.keyword ? keywordUrl : ""
+      // }${this.search.author ? authorUrl : ""}&key=${this.google_books_api}`;
+      const url = `https://cors-anywhere.herokuapp.com/https://www.goodreads.com/search/index.xml?key=${this.goodreads_api}&q=Ender%27s+Game`;
       console.log(url);
-      this.$http
-        .get(url)
-        .then(
-          response => response.json(),
-          error => {
-            console.log(error);
-          }
-        )
-        .then(data => {
-          const dataVolumes = data.items.map(v => {
-            if (v.volumeInfo) {
-              let newVolume = Object.assign({}, defaultVolume, v.volumeInfo);
-              if (newVolume.authors) {
-                newVolume.author = stringFromArrayOfStrings(newVolume.authors);
-              }
-              delete newVolume.allowAnonLogging;
-              delete newVolume.averageRating;
-              delete newVolume.canonicalVolumeLink;
-              delete newVolume.infoLink;
-              delete newVolume.panelizationSummary;
-              delete newVolume.readingModes;
-              return newVolume;
-            }
+      this.$http.get(url).then(
+        response => {
+          parseString(response.data, (err, result) => {
+            console.log(result.GoodreadsResponse.search[0].results[0].work);
+            this.results = result.GoodreadsResponse.search[0].results[0].work;
           });
-          console.log("dataVolumes", dataVolumes);
-          this.results = [];
-          this.results = this.results.concat(dataVolumes);
-        });
+        },
+        error => {
+          console.log(error);
+        }
+      );
     }
   }
 };
